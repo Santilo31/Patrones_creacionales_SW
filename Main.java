@@ -15,10 +15,11 @@ public class Main {
     public static void main(String[] args) {
         int opcion;
         do {
-            System.out.println("\n=== Sistema de Gestión de Productos (Factory Method + Singleton) ===");
+            System.out.println("\n=== Sistema de Gestión de Productos === ");
             System.out.println("1. Crear producto (Factory Method)");
             System.out.println("2. Mostrar inventario");
             System.out.println("3. Configuración global (Singleton)");
+            System.out.println("4. Crear producto (Abstract Factory + Factory Method)");
             System.out.println("0. Salir");
             opcion = leerOpcionMenu();
             System.out.println();
@@ -28,6 +29,7 @@ public class Main {
                 case 1 -> crearConFactoryMethod();
                 case 2 -> listarInventario();
                 case 3 -> probarSingleton();
+                case 4 -> crearConAbstractFactory();
                 case 0 -> System.out.println("Saliendo...");
                 default -> {
                     if (opcion != -1) { 
@@ -41,7 +43,7 @@ public class Main {
     }
 
      // MÉTODO DEL FACTORY METHOD
-     
+
     private static void crearConFactoryMethod() {
         System.out.println("\n--- Crear producto (Factory Method) ---");
         System.out.println("Seleccione el tipo de producto:");
@@ -145,6 +147,77 @@ public class Main {
         }
    
         System.out.println("Total de productos: " + inventario.size());
+    }
+
+    // Abstract Factory
+
+    private static void crearConAbstractFactory() {
+        System.out.println("\n--- Crear producto (Abstract Factory) ---");
+        System.out.println("Seleccione la línea de producto:");
+        System.out.println("1) Premium");
+        System.out.println("2) Estándar");
+        System.out.println("3) Económica");
+
+        int lineaOpcion = leerOpcionMenu();
+        abstractfactory.FabricaLinea fabricaLinea;
+
+        switch (lineaOpcion) {
+            case 1 -> fabricaLinea = new abstractfactory.FabricaLineaPremium();
+            case 2 -> fabricaLinea = new abstractfactory.FabricaLineaEstandar();
+            case 3 -> fabricaLinea = new abstractfactory.FabricaLineaEconomica();
+            default -> {
+                System.out.println("Opción inválida.");
+                return;
+            }
+        }
+
+        System.out.println("\nSeleccione el tipo de producto:");
+        System.out.println("1) Computadora");
+        System.out.println("2) Teléfono");
+        System.out.println("3) Tableta");
+
+        int tipoOpcion = leerOpcionMenu();
+        Producto producto;
+
+        switch (tipoOpcion) {
+            case 1 -> producto = fabricaLinea.crearComputadora();
+            case 2 -> producto = fabricaLinea.crearTelefono();
+            case 3 -> producto = fabricaLinea.crearTableta();
+            default -> {
+                System.out.println("Opción inválida.");
+                return;
+            }
+        }
+
+        // === Aquí pedimos datos al usuario ===
+        System.out.print("Marca (Enter para mantener por defecto '" + producto.getMarca() + "'): ");
+        String marca = sc.nextLine().trim();
+        if (!marca.isEmpty()) {
+            producto.setMarca(marca);
+        }
+
+        System.out.print("Modelo (Enter para mantener por defecto '" + producto.getModelo() + "'): ");
+        String modelo = sc.nextLine().trim();
+        if (!modelo.isEmpty()) {
+            producto.setModelo(modelo);
+        }
+
+        System.out.print("Precio (Enter para mantener por defecto $" + producto.getPrecio() + "): ");
+        String precioTexto = sc.nextLine().trim();
+        if (!precioTexto.isEmpty()) {
+            try {
+                double precio = Double.parseDouble(precioTexto);
+                producto.setPrecio(precio);
+            } catch (NumberFormatException e) {
+                System.out.println("**Entrada inválida. Se mantiene precio por defecto.**");
+            }
+        }
+
+        // Mostrar resultado final
+        System.out.println("\nProducto creado exitosamente con Abstract Factory:");
+        producto.mostrarInfo();
+
+        inventario.add(producto);
     }
 
     // SINGLETON
