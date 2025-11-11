@@ -39,7 +39,9 @@ public class Main {
         while (opcion != 0);
          sc.close();
     }
+
      // MÉTODO DEL FACTORY METHOD
+     
     private static void crearConFactoryMethod() {
         System.out.println("\n--- Crear producto (Factory Method) ---");
         System.out.println("Seleccione el tipo de producto:");
@@ -144,7 +146,9 @@ public class Main {
    
         System.out.println("Total de productos: " + inventario.size());
     }
+
     // SINGLETON
+
        private static void probarSingleton() {
         ConfiguracionGlobal config = ConfiguracionGlobal.getInstancia();
         int opcion;
@@ -176,6 +180,7 @@ public class Main {
             }
         } while (opcion != 0);
     }
+
      // LECTURA ROBUSTA DE OPCIONES
 
     private static int leerOpcionMenu() {
@@ -199,6 +204,7 @@ public class Main {
 
     
     // CONFIGURAR MODO DEBUG (VALIDACIÓN ROBUSTA)
+
     private static void configurarModoDebug(ConfiguracionGlobal config) {
         boolean entradaValida = false;
 
