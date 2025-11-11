@@ -1,26 +1,36 @@
 import singleton.ConfiguracionGlobal;
-import java.util.InputMismatchException; // Importar la clase de excepción
-import java.util.Scanner;
+import factorymethod.*;
+import productos.Producto;
+import java.util.*;
+
+/**
+ * Menú principal con: - Configuración global (Singleton) - Creación de productos (Factory Method)
+ */
 
 public class Main {
 
     private static final Scanner sc = new Scanner(System.in);
+    private static final List<Producto> inventario = new ArrayList<>();
 
     public static void main(String[] args) {
         int opcion;
         do {
-            System.out.println("\n=== Sistema de Configuración Global (Singleton) ===");
-            System.out.println("1. Mostrar y modificar configuración");
+            System.out.println("\n=== Sistema de Gestión de Productos (Factory Method + Singleton) ===");
+            System.out.println("1. Crear producto (Factory Method)");
+            System.out.println("2. Mostrar inventario");
+            System.out.println("3. Configuración global (Singleton)");
             System.out.println("0. Salir");
             opcion = leerOpcionMenu();
             System.out.println();
 
 
             switch (opcion) {
-                case 1 -> probarSingleton();
+                case 1 -> crearConFactoryMethod();
+                case 2 -> listarInventario();
+                case 3 -> probarSingleton();
                 case 0 -> System.out.println("Saliendo...");
                 default -> {
-                    if (opcion != -1) { // -1 significa que ya se mostró el error de InputMismatch
+                    if (opcion != -1) { 
                         System.out.println("Opción inválida.");
                     }
                 }
@@ -29,30 +39,118 @@ public class Main {
         while (opcion != 0);
          sc.close();
     }
+     // MÉTODO DEL FACTORY METHOD
+    private static void crearConFactoryMethod() {
+        System.out.println("\n--- Crear producto (Factory Method) ---");
+        System.out.println("Seleccione el tipo de producto:");
+        System.out.println("1) Computadora");
+        System.out.println("2) Teléfono");
+        System.out.println("3) Tableta");
 
-    private static int leerOpcionMenu() {
-        int opcion = -1;
-        boolean entradaValida = false;
+        int op = leerOpcionMenu();
+        FabricaProducto fabricante;
 
-        while (!entradaValida) {
-            System.out.print("Seleccione una opción: ");
-            try {
-                opcion = sc.nextInt();
-                entradaValida = true; // Si llegamos aquí, es un entero válido
-            } catch (InputMismatchException e) {
-                System.out.println(" **Error**: Debe ingresar un número para seleccionar la opción.");
-                sc.next(); // Limpiar el buffer de la entrada no válida
-            } finally {
-                sc.nextLine(); // Limpiar el buffer de la nueva línea después de nextInt o el error
+        switch (op) {
+            case 1 -> fabricante = new FabricaComputadora();
+            case 2 -> fabricante = new FabricaTelefono();
+            case 3 -> fabricante = new FabricaTableta();
+            default -> {
+                System.out.println("Opción inválida.");
+                return;
             }
         }
-        return opcion;
+        // Solicitar datos del producto
+        System.out.print("Marca (Enter para usar valor por defecto 'Genérica'): ");
+        String marca = sc.nextLine().trim();
+
+        System.out.print("Modelo (Enter para usar valor por defecto): ");
+        String modelo = sc.nextLine().trim();
+
+        System.out.print("Precio (Enter para usar valor por defecto): ");
+        String precioTexto = sc.nextLine().trim();
+        Double precio = null;
+        if (!precioTexto.isEmpty()) {
+            try {
+                precio = Double.parseDouble(precioTexto);
+            } catch (NumberFormatException e) {
+                System.out.println(" **Entrada inválida. Se usará el precio por defecto.**");
+            }
+        }
+         // Preguntar si desea personalizar especificaciones
+        System.out.print("¿Desea personalizar especificaciones técnicas? (s/n): ");
+        String respuesta = sc.nextLine().trim().toLowerCase();
+
+        Map<String, String> especificaciones = null;
+        if (respuesta.equals("s") || respuesta.equals("si")) {
+            especificaciones = solicitarEspecificaciones();
+        }
+
+        // Crear el producto usando Factory Method
+        Producto producto = fabricante.crearProducto(
+                marca.isEmpty() ? null : marca,
+                modelo.isEmpty() ? null : modelo,
+                precio,
+                especificaciones);
+
+        inventario.add(producto);
+        System.out.println("\n Producto creado exitosamente:");
+        producto.mostrarInfo();
     }
-    private static void probarSingleton() {
+
+    /**
+     * Solicita especificaciones personalizadas al usuario
+     */
+    private static Map<String, String> solicitarEspecificaciones() {
+        Map<String, String> specs = new HashMap<>();
+        System.out.println("\nIngrese especificaciones (Enter en 'Especificación' para terminar):");
+
+        while (true) {
+            System.out.print("  Especificación (RAM, CPU, Pantalla, Almacenamiento): ");
+            String clave = sc.nextLine().trim();
+            if (clave.isEmpty()) {
+                break;
+            }
+
+            System.out.print("  Valor: ");
+            String valor = sc.nextLine().trim();
+
+            if (!valor.isEmpty()) {
+                specs.put(clave, valor);
+                System.out.println("  Añadido: " + clave + " = " + valor);
+            }
+        }
+
+        return specs.isEmpty() ? null : specs;
+    }
+
+   
+    // INVENTARIO
+    
+    
+    private static void listarInventario() {
+        if (inventario.isEmpty()) {
+            System.out.println("Inventario vacío.");
+            return;
+        }
+
+        System.out.println("\n=== Inventario de Productos ===");
+        int i = 1;
+        for (Producto p : inventario) {
+
+            System.out.println("Producto #" + i++);
+            p.mostrarInfo();
+            System.out.println();
+        }
+   
+        System.out.println("Total de productos: " + inventario.size());
+    }
+    // SINGLETON
+       private static void probarSingleton() {
         ConfiguracionGlobal config = ConfiguracionGlobal.getInstancia();
-       int opcion;
+        int opcion;
+
         do {
-        config.mostrarConfiguracion();
+            config.mostrarConfiguracion();
             System.out.println("1. Activar/desactivar modo debug");
             System.out.println("2. Cambiar entorno");
             System.out.println("3. Cambiar idioma");
@@ -78,30 +176,48 @@ public class Main {
             }
         } while (opcion != 0);
     }
-/**
-     * Manejo de la entrada de usuario para el modo Debug con validación robusta.
-     */
+     // LECTURA ROBUSTA DE OPCIONES
+
+    private static int leerOpcionMenu() {
+        int opcion = -1;
+        boolean entradaValida = false;
+
+        while (!entradaValida) {
+            System.out.print("Seleccione una opción: ");
+            try {
+                opcion = sc.nextInt();
+                entradaValida = true;
+            } catch (InputMismatchException e) {
+                System.out.println(" **Error**: Debe ingresar un número para seleccionar la opción.");
+                sc.next();
+            } finally {
+                sc.nextLine();
+            }
+        }
+        return opcion;
+    }
+
+    
+    // CONFIGURAR MODO DEBUG (VALIDACIÓN ROBUSTA)
     private static void configurarModoDebug(ConfiguracionGlobal config) {
         boolean entradaValida = false;
 
         while (!entradaValida) {
             System.out.print("Ingrese true para activar o false para desactivar: ");
             try {
-                // Intentamos leer el booleano
                 boolean nuevoModo = sc.nextBoolean();
 
-                // Si la lectura tiene éxito, asignamos y salimos del bucle
                 config.setModoDebug(nuevoModo);
                 entradaValida = true;
 
             } catch (InputMismatchException e) {
-                // Capturamos la excepción si la entrada no fue un booleano válido
+
                 System.out.println("\n **ALERTA**: Entrada no válida. Debe ingresar 'true' o 'false'.");
                 System.out.println("Por favor, intente de nuevo.");
 
                 sc.next();
             } finally {
-                sc.nextLine(); // Limpiar el buffer después de la operación (éxito o error)
+                sc.nextLine(); 
             }
         }
         System.out.println(" Modo Debug actualizado a: " + config.isModoDebug());
