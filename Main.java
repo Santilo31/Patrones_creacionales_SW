@@ -21,6 +21,7 @@ public class Main {
             System.out.println("3. Configuración global (Singleton)");
             System.out.println("4. Crear producto (Abstract Factory + Factory Method)");
             System.out.println("5. Listar clones/variantes en inventario");
+            System.out.println("6. Actualizar stock desde sistema externo (Adapter)");
             System.out.println("0. Salir");
             opcion = leerOpcionMenu();
             System.out.println();
@@ -32,6 +33,7 @@ public class Main {
                 case 3 -> probarSingleton();
                 case 4 -> crearConAbstractFactory();
                 case 5 -> listarClones();
+                case 6 -> usarAdapterParaActualizarStock();
                 case 0 -> System.out.println("Saliendo...");
                 default -> {
                     if (opcion != -1) { 
@@ -303,6 +305,7 @@ public class Main {
         }
         System.out.println(" Modo Debug actualizado a: " + config.isModoDebug());
     }
+
     // PROTOTYPE
 
     private static void probarPrototype() {
@@ -448,4 +451,71 @@ public class Main {
             System.out.println("No hay clones o variantes registrados en el inventario.");
         }
     }
+    // ADAPTER: Actualizar stock desde sistema externo
+// ==========================================================
+private static void usarAdapterParaActualizarStock() {
+    if (inventario.isEmpty()) {
+        System.out.println("No hay productos en el inventario para actualizar.");
+        return;
+    }
+
+    System.out.println("\n=== Actualización de stock (Adapter) ===");
+    for (int i = 0; i < inventario.size(); i++) {
+        var p = inventario.get(i);
+        System.out.println((i + 1) + ") " + p.getTipo() + " - " + p.getModelo() +
+                " - Stock actual: " + (p.getStock() == 0 ? "Sin registrar" : p.getStock() + " unidades"));
+    }
+
+    System.out.print("\nSeleccione el número del producto a actualizar: ");
+    int seleccion = leerOpcionMenu();
+
+    if (seleccion < 1 || seleccion > inventario.size()) {
+        System.out.println("Selección inválida.");
+        return;
+    }
+
+    var producto = inventario.get(seleccion - 1);
+
+    // Crear el sistema externo y el adaptador
+    adapter.ExternalStockSystem externalSystem = new adapter.ExternalStockSystem();
+    adapter.StockProvider stockAdapter = new adapter.StockAdapter(externalSystem);
+
+    // Elegir fuente del nuevo stock
+    System.out.println("\nSeleccione el origen del nuevo stock:");
+    System.out.println("1) Usar sistema externo (Adapter con lotes)");
+    System.out.println("2) Ingresar cantidad en lotes manualmente");
+
+    int origen = leerOpcionMenu();
+    int nuevoStock;
+
+    if (origen == 1) {
+        // Caso 1: obtener stock desde el sistema externo
+        nuevoStock = stockAdapter.getStockUnits(producto.getTipo());
+        System.out.println("\nStock obtenido del sistema externo y convertido a unidades: " + nuevoStock);
+
+    } else if (origen == 2) {
+        // Caso 2: conversión manual de lotes → unidades
+        System.out.print("Ingrese cantidad en lotes (cada lote = 10 unidades): ");
+        int lotes = leerOpcionMenu();
+        nuevoStock = ((adapter.StockAdapter) stockAdapter).convertirDesdeUsuario(lotes);
+        System.out.println("\nEquivalente a " + nuevoStock + " unidades.");
+    } else {
+        System.out.println("Opción inválida.");
+        return;
+    }
+
+    // Confirmar actualización
+    System.out.print("¿Desea actualizar el stock del producto? (s/n): ");
+    String respuesta = sc.nextLine().trim().toLowerCase();
+
+    if (respuesta.equals("s") || respuesta.equals("si")) {
+        producto.setStock(nuevoStock);
+        System.out.println("✅ Stock actualizado correctamente.");
+    } else {
+        System.out.println("No se realizó ningún cambio.");
+    }
+
+    System.out.println("\n--- Información actualizada del producto ---");
+    producto.mostrarInfo();
+}
 }
